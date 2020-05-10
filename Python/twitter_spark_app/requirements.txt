@@ -1,0 +1,5 @@
+pyspark
+matplotlib
+tweepy
+nltk
+pytest
