@@ -215,9 +215,10 @@ git checkout sourceBranchName data_dump_2020-05-*.csv
 ```
 
 This will copy all files with dates in May in that branch and location
-data_dump_2020-05-20.csv
-data_dump_2020-05-21.csv
-data_dump_2020-05.22.csv
+
+- data_dump_2020-05-20.csv
+- data_dump_2020-05-21.csv
+- data_dump_2020-05.22.csv
 
 -----------------------
 
