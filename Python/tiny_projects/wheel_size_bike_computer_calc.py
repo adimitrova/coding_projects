@@ -36,8 +36,8 @@ def hedgehog_mode():
     Circumference: 838
     Weight: 0.812 kg
 
-    Wheel size: 12.5 inch = 317.5mm
-    Circumference: 998
+    Wheel size: 12 inch = 304.8mm
+    Circumference: 958
     Weight: 1.245 kg
     """
 
