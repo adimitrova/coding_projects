@@ -97,7 +97,9 @@ class Epubify(object):
 
             except FileExistsError as err:
                 print(">> A file with this name already exists at {}".format(self.file_path))
-
+        else:
+            # TODO: save to system (pocket, dropbox etc)
+            print("Saving to system {}", to_system)
 
 if __name__ == '__main__':
     settings = {
