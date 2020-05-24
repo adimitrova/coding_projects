@@ -4,6 +4,8 @@ from sys import modules
 from importlib import import_module
 
 epubify = import_module(name="epubify", package="epubify")
+ascii_art = import_module(name="ascii_art", package="epubify")
+
 
 def input_prompt():
     print(">> We will ask you for input. If you would rather have a config file, press 1, for manual input, press 2")
@@ -15,11 +17,11 @@ def input_prompt():
             config_settings = json.load(file)
         return config_settings
     elif mode == 2:
-        print(">> Questions, marked with\'*\' are required.")
-        print(">> *Enter URL for the page to convert to epub: ")
+        print(">> Questions, marked with \'*\' are required.")
+        print(">> *Enter URL for the page to convert to epub, surrounded by quotes: ")
         url = input()
 
-        print(">> *Enter the name for the new book file: e.g. \'Harry Potter and the order of the phoenix\'")
+        print(">> Enter the name for the new book file: e.g. \'Harry Potter and the order of the phoenix\'")
         output_file_name = input()
 
         print(">> *Enter credentials file name, after placing it into the system/vault/ dir.")
@@ -28,33 +30,50 @@ def input_prompt():
         print(">> Enter book author: ")
         author = input()
 
+        print(">> *Enter book title: ")
+        title = input()
+
+        print(">> Enter \'local\' mode to save on the machine, or \'remote\' mode to save in a cloud system like dropbox: push ENTER to skip.. ")
+        mode = input()
+
+        print(">> Enter system (\'dropbox\' and \'pocket\' are currently supported): push ENTER to skip.. ")
+        system = input()
+
         config_settings = {
-            "url": url,
-            "filePath": output_file_name,
+            "URL": url,
+            "title": title,
+            "author": author,
             "credsFileName": creds_path,
-            "author": author
+            "mode": mode,
+            "system": system,
+            "filePath": output_file_name
         }
+
         return config_settings
     else:
         raise ValueError("Invalid choice. Please enter 1 or 2.")
 
 
 def main():
-    # input_prompt()
+    settings = input_prompt()
 
-    settings = {
-        "URL": 'someURL',
-        "title": 'harry potter',
-        "author": 'j.k.rowling',
-    }
+    # settings = {
+    #     "URL": "https://en.wikipedia.org/wiki/Chicxulub_crater",
+    #     "title": 'Chicxulub_crater',
+    #     "author": 'wikipedia',
+    #     "credsFileName": "api_keys.json",
+    #     "mode": "local",
+    #     "system": "dropbox",
+    #     "filePath": "/home/adimitrova/DEVELOPMENT/Github/PERSONAL_REPOS/"
+    # }
 
     epub = epubify.Epubify(**settings)
-    # text = epub.fetch_html_text()
-    # book_content = epub.preprocess_text(text)
-    # source_system = epub.system_import('pocket')
-    # target_system = epub.system_import('dropbox')
-    # epub.create_book(book_content)
-    # target_system.save()
+    text = epub.fetch_html_text()
+    book_content = epub.preprocess_text(text)
+    ebook = epub.create_book(book_content)
+    epub.save_book(book=ebook, mode='remote', sys='dropbox')
+
+    print(ascii_art.llama_small)
 
 
 if __name__ == '__main__':

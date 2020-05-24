@@ -15,14 +15,14 @@ class Dropbox(object):
 
         return creds['access_token']
 
-    def save(self):
+    def save_book(self, book):
         # ================================== Save to dropbox ===============================
 
         dbx = dropbox.Dropbox(self.token)
 
         try:
-            with open(local_path, "rb") as file:
-                print(">> Uploading file: [{}] to Dropbox at: [{}]".format(local_path, self.output_file_path))
+            with open(self.output_file_path, "rb") as file:
+                print(">> Uploading file: [{}] to Dropbox at: [{}]".format(self.output_file_path, self.output_file_path))
                 dbx.files_upload(file.read(), self.output_file_path, mute=True)
         except TypeError:
             print(">> Expecting bytes data as input for the upload on dropbox.")

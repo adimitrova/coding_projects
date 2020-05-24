@@ -2,17 +2,37 @@
 import mkepub, re, json, dropbox, requests, urllib
 from os import getcwd, path
 from bs4 import BeautifulSoup
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class Epubify(object):
     # TODO: replace all prints with logger
     def __init__(self, **kwargs):
-        self.url = kwargs.get('URL')
+        self.settings = kwargs
+        self.url = kwargs.get('URL').strip("\"").strip("\'")
         self.title = kwargs.get('title')
         self.author = kwargs.get('author')
-        self.file_path = kwargs.get('filePath', '%s/books/%s.epub' % (getcwd(), self.title))
+        self.system = kwargs.get("system")
+        self.mode = kwargs.get("mode", None)
+        self.file_path = kwargs.get('filePath', None)
 
-        print(">> The output path for the book will be: \n[%s] " % self.file_path)
+        if not self.mode and not self.file_path:
+            # set local filepath
+            self.file_path = kwargs.get('filePath', '%s/books/%s.epub' % (getcwd(), self.title))
+        elif self.mode == "remote" and not self.file_path:
+            self.file_path = None
+        elif self.mode == "remote" and self.file_path:
+            assert not str(self.file_path).endswith('.epub')
+            self.file_path = kwargs.get('filePath') + '%s.epub' % self.title
+        else:
+            self.file_path = '%s/books/%s.epub' % (getcwd(), self.title)
+
+        # update filePath to the dict which will be passed onto the save_book method
+        self.settings['filePath'] = self.file_path
+
+        print(">> The book will be saved at: \n[%s] " % self.file_path)
 
     def fetch_html_text(self):
         response = requests.get(self.url, verify=False)
@@ -88,8 +108,8 @@ class Epubify(object):
 
         return book
 
-    def save_book(self, to_system, book, mode='local'):
-        if mode == 'local':
+    def save_book(self, book, mode='local', sys=None):
+        if self.mode == 'local':
             # save on local machine
             try:
                 book.save(self.file_path)
@@ -97,9 +117,12 @@ class Epubify(object):
 
             except FileExistsError as err:
                 print(">> A file with this name already exists at {}".format(self.file_path))
-        else:
+        elif self.mode == 'remote':
             # TODO: save to system (pocket, dropbox etc)
-            print("Saving to system {}", to_system)
+            print("Saving to system %s" % sys)
+            target_system = self.system_import(sys, **self.settings)
+            target_system.save_book(book)
+
 
 if __name__ == '__main__':
     settings = {
