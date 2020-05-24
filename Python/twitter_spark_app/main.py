@@ -2,6 +2,10 @@ from twitter import TwitterCrawler, TwitterReader
 from preprocessor import Preprocessor
 from utils import list_of_n_dates_from, write_to_csv
 from stats import generate_x_and_y_values, plot, generate_slopes
+import logging
+from pyspark.sql import SparkSession
+
+logger = logging.Logger(__name__)
 
 
 def prompt_twitter_crawler():
@@ -62,26 +66,32 @@ def prompt_for_input():
     print(">> Enter file name for output with .csv extension: ")
     oFile_name = input()
 
+    print(">> Enter language (\'english\', \'dutch\'.. leave empty for dutch): ")
+    lang = input()
+
     settings = {
         "user_topic": topic,
         "file_path": data_file_path,
         "creds_file_name": creds_path,
         "start_date": date,
         "delta_days": delta_days,
-        "output_file_name": oFile_name
+        "output_file_name": oFile_name,
+        "lang": lang
     }
 
     return settings
 
 
 def main():
+
     settings = {
         "user_topic": "egel in tuin",
-        "file_path": "data/TwitterData/twitter-sample.json",
+        "file_path": "data/2020_03_15_13.json",
         "creds_file_name": "twitter_ani.json",
-        "start_date": "2012-01-08",
+        "start_date": "2020-03-15",
         "delta_days": 5,
-        "output_file_name": "output_res.csv"
+        "output_file_name": "output_res.csv",
+        "lang": "english"
     }
 
     # settings = prompt_for_input()
@@ -89,15 +99,15 @@ def main():
     if not settings['output_file_name'].endswith('.csv'):
         raise AttributeError("It seems the output file is missing .csv extension. Please add it.")
 
-    if settings['creds_file_name'] is not None:
-        if not settings['creds_file_name'].endswith('.json'):
-            raise AttributeError("It seems the twitter creds file is missing .json extension. Please add it.")
+    # if settings['creds_file_name'] is not None:
+    #     if not settings['creds_file_name'].endswith('.json'):
+    #         raise AttributeError("It seems the twitter creds file is missing .json extension. Please add it.")
 
-    if settings['start_date'] != "2012-01-08" and settings['start_date'] not in list_of_n_dates_from("2012-01-08", 7):
-        raise KeyError("The provided start date is not in the dataset. "
-                       "Please modify the date with 2012-01-08 or up to 7 days earlier but then modify also delta_days "
-                       "to be not more than 2012-01-08 - 7 days., e.g. if date provided is 2012-01-08, "
-                       "delta can be up to 7, with 2012-01-06 - up to 5 etc. Otherwise there won't be any data.")
+    # if settings['start_date'] != "2012-01-08" and settings['start_date'] not in list_of_n_dates_from("2012-01-08", 7):
+    #     raise KeyError("The provided start date is not in the dataset. "
+    #                    "Please modify the date with 2012-01-08 or up to 7 days earlier but then modify also delta_days "
+    #                    "to be not more than 2012-01-08 - 7 days., e.g. if date provided is 2012-01-08, "
+    #                    "delta can be up to 7, with 2012-01-06 - up to 5 etc. Otherwise there won't be any data.")
 
     reader = TwitterReader(**settings)
     df = reader.read()
