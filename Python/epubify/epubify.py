@@ -8,13 +8,11 @@ class Epubify(object):
     # TODO: replace all prints with logger
     def __init__(self, **kwargs):
         self.url = kwargs.get('URL')
-        self.file_path = kwargs.get('filePath', None)
         self.title = kwargs.get('title')
         self.author = kwargs.get('author')
+        self.file_path = kwargs.get('filePath', '%s/books/%s.epub' % (getcwd(), self.title))
 
-        if not self.file_path:
-            print("No filePath provided, the name of the title will be used as file name "
-                  "and the book will be saved in %s/%s.epub" % (getcwd(), self.title))
+        print(">> The output path for the book will be: \n[%s] " % self.file_path)
 
     def fetch_html_text(self):
         response = requests.get(self.url, verify=False)
@@ -69,17 +67,16 @@ class Epubify(object):
         # TODO: Add more cleansing logic
 
     @staticmethod
-    def system_import(sys):
+    def system_import(sys, **kwargs):
+        module_name = 'drop_box' if sys == 'dropbox' else sys.lower()
         try:
-            import_system = lambda class_name: getattr(
-                __import__("systems.{}".format(class_name.lower()), locals(), globals(), [class_name]),
-                class_name,
-            )
+            from importlib import import_module
+            class_ = getattr(import_module("systems.%s" % module_name), sys.capitalize())
+            system_instance = class_(**kwargs)
         except ImportError as e:
-            # Display error message
             print(e)
 
-        return import_system(sys.capitalize())
+        return system_instance
 
     def create_book(self, book_text):
         book = mkepub.Book(title=self.title, author=self.author)
@@ -107,11 +104,8 @@ if __name__ == '__main__':
         "URL": 'someURL',
         "title": 'harrypotter',
         "author": 'j.k.rowling',
-        "credsFileName": None
+        "credsFileName": "api_keys.json"
     }
 
     epubify = Epubify(**settings)
-    system = Epubify.system_import('pocket')
-    print(system.__dict__)
-    system.set_username(username='ani')
-    print(system.get_username())
+    system = Epubify.system_import('dropbox', **settings)

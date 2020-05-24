@@ -52,25 +52,6 @@ def main():
     # epubify.create_book(book_content)
 
 
-    # ================================== Save to dropbox ===============================
-
-    # dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
-    #
-    # if dropboxPath:
-    #     dropbox_path = dropboxPath
-    # else:
-    #     dropbox_path = ''   # root folder
-    #
-    # try:
-    #     with open(local_path, "rb") as file:
-    #         print(">> Uploading file: [{}] to Dropbox at: [{}]".format(local_path, dropbox_path))
-    #         dbx.files_upload(file.read(), dropbox_path, mute=True)
-    # except TypeError:
-    #     print("Expecting bytes data as input for the upload on dropbox.")
-
-    # TODO: Custom saving location
-    # TODO: Save to dropbox..
-
 
 if __name__ == '__main__':
     # _authenticate()
