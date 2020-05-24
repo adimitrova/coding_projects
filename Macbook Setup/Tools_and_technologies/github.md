@@ -208,6 +208,18 @@ git checkout destinationBranch
 git checkout sourceBranchName myFile.txt
 ```
 
+Or if the files are multiple with almost the same names and, say, different dates, do:
+
+```
+git checkout sourceBranchName data_dump_2020-05-*.csv
+```
+
+This will copy all files with dates in May in that branch and location
+
+- data_dump_2020-05-20.csv
+- data_dump_2020-05-21.csv
+- data_dump_2020-05.22.csv
+
 -----------------------
 
 ## Cleanup local branches
@@ -242,6 +254,46 @@ git fetch --prune --all
 
 Using git v1.8.0 or later:
 
+```
+git branch branch_name --set-upstream-to your_new_remote/branch_name
+```
+
+Or you can use the -u switch:
+
+```
+git branch branch_name -u your_new_remote/branch_name
+```
+
+----------------
+
+## Undo LOCAL changes made to a file
+
+```
+git checkout -- filename.txt
+```
+
+------------------
+
+## Start ignoring a previously committed file
+
+```sh
+$ echo debug.log >> .gitignore
+$ git rm --cached debug.log
+rm 'debug.log'
+$ git commit -m "Start ignoring debug.log"
+```
+
+----------------
+
+## Git pull multiple repos at once
+Instead of running cd repo_name >> git pull, 
+run `multipull` from the parent directory!!!
+
+But first, add this line to the `~/.zshrc` file and then source it
+
+```sh
+alias multipull="find . -mindepth 1 -maxdepth 1 -type d -print -exec git -C {} pull \;"
+```
 ```
 git branch branch_name --set-upstream-to your_new_remote/branch_name
 ```
