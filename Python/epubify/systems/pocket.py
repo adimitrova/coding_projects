@@ -15,6 +15,7 @@ class Pocket(object):
         """
         self.cred_filename = kwargs.get('credentials_file', "vault/api_keys.json")
         self.authenticated = self._authenticate(self.cred_filename)
+        self.user_name = ''
 
     def get_article_list(self):
         if self._authenticate():
@@ -54,3 +55,10 @@ class Pocket(object):
         # https://getpocket.com/developer/docs/authentications
 
         return True
+
+    def set_username(self, username):
+        print("Username: ", username)
+        self.user_name = username
+
+    def get_username(self):
+        return self.user_name

@@ -4,14 +4,20 @@ from os import getcwd, path
 
 from bs4 import BeautifulSoup
 
-
 class Epubify(object):
+    # TODO: replace all prints with logger
     def __init__(self, **kwargs):
         self.url = kwargs.get('URL')
-        self.file_path = kwargs.get('filePath')
+        self.file_path = kwargs.get('filePath', None)
+        self.title = kwargs.get('title')
+        self.author = kwargs.get('author')
 
-    def fetch_html_text(self, url):
-        response = requests.get(URL, verify=False)
+        if not self.file_path:
+            print("No filePath provided, the name of the title will be used as file name "
+                  "and the book will be saved in %s/%s.epub" % (getcwd(), self.title))
+
+    def fetch_html_text(self):
+        response = requests.get(self.url, verify=False)
 
         soup = BeautifulSoup(response.content, features="html.parser")
 
@@ -62,88 +68,50 @@ class Epubify(object):
         return final_content
         # TODO: Add more cleansing logic
 
-    def save_epub(self, system):
-        exec("from {system} import {systemclass}".format(system=system,
-                                                            systemclass=system.capitalize()))
-        system = system.capitalize()
-        print(system.__dict__)
+    @staticmethod
+    def system_import(sys):
+        try:
+            import_system = lambda class_name: getattr(
+                __import__("systems.{}".format(class_name.lower()), locals(), globals(), [class_name]),
+                class_name,
+            )
+        except ImportError as e:
+            # Display error message
+            print(e)
 
-def main(URL, fileName):
-    settings = {
-        "URL": URL,
-        "filePath": fileName
-    }
-    epubify = Epubify(**settings)
-    # text = epubify.fetch_html_text(URL)
-    # final_content = epubify.preprocess_text(text)
-    epubify.save_epub('pocket')
+        return import_system(sys.capitalize())
 
-    # ================================== prepare to save as epub ===============================
+    def create_book(self, book_text):
+        book = mkepub.Book(title=self.title, author=self.author)
 
-    # print(">> Done!")
-    #
-    # if file_name:
-    #     title = file_name
-    # else:
-    #     raise AttributeError("You must enter the name for the file.")
-    #
-    # book = mkepub.Book(title=title, author='Article')
-    #
-    # book.add_page(title, final_content)
-    # # print(f"\n========== CONTENT =========== {final_content} \n============== END OF CONTENT =============\n")
-    #
-    # if localPath:
-    #     local_path = localPath + '/' + title + '.epub'
-    # else:
-    #     local_path = "{}/books/{}.epub".format(getcwd(), title)
-    #
-    # try:
-    #     book.save(local_path)
-    #     print(">> Saved (locally) at: {}".format(local_path))
-    # except FileExistsError as err:
-    #     print(">> A file with this name already exists at {}".format(local_path))
+        book.add_page(self.title, book_text)
+        # print(f"\n========== CONTENT =========== {final_content} \n============== END OF CONTENT =============\n")
 
-    # ================================== Save to dropbox ===============================
+        local_path = "{}/books/{}.epub".format(getcwd(), self.title)
 
-    # dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
-    # 
-    # if dropboxPath:
-    #     dropbox_path = dropboxPath
-    # else:
-    #     dropbox_path = ''   # root folder
-    # 
-    # try:
-    #     with open(local_path, "rb") as file:
-    #         print(">> Uploading file: [{}] to Dropbox at: [{}]".format(local_path, dropbox_path))
-    #         dbx.files_upload(file.read(), dropbox_path, mute=True)
-    # except TypeError:
-    #     print("Expecting bytes data as input for the upload on dropbox.")
+        return book
 
-    # TODO: Custom saving location
-    # TODO: Save to dropbox..
+    def save_book(self, to_system, book, mode='local'):
+        if mode == 'local':
+            # save on local machine
+            try:
+                book.save(self.file_path)
+                print(">> Saved (locally) at: {}".format(self.file_path))
+
+            except FileExistsError as err:
+                print(">> A file with this name already exists at {}".format(self.file_path))
 
 
 if __name__ == '__main__':
-    # _authenticate()
-    main('https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell', 'test')
-    # while True:
-    #     creds_file_path = path.abspath(path.join(__file__, "../../.."))+"/credentials.json"
-    #
-    #     # with open(creds_file_path) as creds_file:
-    #     #     creds_content = json.load(creds_file)
-    #     print("------------")
-    #     url = input("URL of the article: ")
-    #
-    #     # url = "https://getpocket.com/redirect?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FFinal_Solution&formCheck=bf15d6ab03876623dc234496a40b4ccb"
-    #
-    #     # dropbox_token = input("Create a dropbox app and paste the access token here: ")
-    #     # dropbox_token = creds_content['epubify']['access_token']
-    #
-    #     # save_path = input("Enter linux-like path where the file will be saved: ")
-    #     file_name = input("File name: ")
-    #
-    #     # epubify(url, file_name, dropbox_token, dropbox_path)
-    #     epubify(url, file_name)
+    settings = {
+        "URL": 'someURL',
+        "title": 'harrypotter',
+        "author": 'j.k.rowling',
+        "credsFileName": None
+    }
 
-# https://stackoverflow.com/questions/1325581/how-do-i-check-if-im-running-on-windows-in-python
-# https://medium.com/dreamcatcher-its-blog/making-an-stand-alone-executable-from-a-python-script-using-pyinstaller-d1df9170e263
+    epubify = Epubify(**settings)
+    system = Epubify.system_import('pocket')
+    print(system.__dict__)
+    system.set_username(username='ani')
+    print(system.get_username())
