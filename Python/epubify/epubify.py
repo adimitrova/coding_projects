@@ -1,8 +1,8 @@
 # import beautifulsoup4
 import mkepub, re, json, dropbox, requests, urllib
 from os import getcwd, path
-
 from bs4 import BeautifulSoup
+
 
 class Epubify(object):
     # TODO: replace all prints with logger

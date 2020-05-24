@@ -1,5 +1,9 @@
-from .epubify import Epubify
 import json
+from sys import modules
+# from .epubify import Epubify
+from importlib import import_module
+
+epubify = import_module(name="epubify", package="epubify")
 
 def input_prompt():
     print(">> We will ask you for input. If you would rather have a config file, press 1, for manual input, press 2")
@@ -34,6 +38,7 @@ def input_prompt():
     else:
         raise ValueError("Invalid choice. Please enter 1 or 2.")
 
+
 def main():
     # input_prompt()
 
@@ -41,39 +46,19 @@ def main():
         "URL": 'someURL',
         "title": 'harry potter',
         "author": 'j.k.rowling',
-        "credsFileName": None
     }
 
-    epubify = Epubify(**settings)
-    # text = epubify.fetch_html_text()
-    # book_content = epubify.preprocess_text(text)
-    # source_system = Epubify.system_import('pocket')
-    # target_system = Epubify.system_import('dropbox')
-    # epubify.create_book(book_content)
-
+    epub = epubify.Epubify(**settings)
+    # text = epub.fetch_html_text()
+    # book_content = epub.preprocess_text(text)
+    # source_system = epub.system_import('pocket')
+    # target_system = epub.system_import('dropbox')
+    # epub.create_book(book_content)
+    # target_system.save()
 
 
 if __name__ == '__main__':
-    # _authenticate()
     main()
-    # while True:
-    #     creds_file_path = path.abspath(path.join(__file__, "../../.."))+"/credentials.json"
-    #
-    #     # with open(creds_file_path) as creds_file:
-    #     #     creds_content = json.load(creds_file)
-    #     print("------------")
-    #     url = input("URL of the article: ")
-    #
-    #     # url = "https://getpocket.com/redirect?url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FFinal_Solution&formCheck=bf15d6ab03876623dc234496a40b4ccb"
-    #
-    #     # dropbox_token = input("Create a dropbox app and paste the access token here: ")
-    #     # dropbox_token = creds_content['epubify']['access_token']
-    #
-    #     # save_path = input("Enter linux-like path where the file will be saved: ")
-    #     file_name = input("File name: ")
-    #
-    #     # epubify(url, file_name, dropbox_token, dropbox_path)
-    #     epubify(url, file_name)
 
-# https://stackoverflow.com/questions/1325581/how-do-i-check-if-im-running-on-windows-in-python
-# https://medium.com/dreamcatcher-its-blog/making-an-stand-alone-executable-from-a-python-script-using-pyinstaller-d1df9170e263
+    # https://stackoverflow.com/questions/1325581/how-do-i-check-if-im-running-on-windows-in-python
+    # https://medium.com/dreamcatcher-its-blog/making-an-stand-alone-executable-from-a-python-script-using-pyinstaller-d1df9170e263
