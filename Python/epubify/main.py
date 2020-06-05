@@ -55,17 +55,17 @@ def input_prompt():
 
 
 def main():
-    settings = input_prompt()
+    # settings = input_prompt()
 
-    # settings = {
-    #     "URL": "https://en.wikipedia.org/wiki/Chicxulub_crater",
-    #     "title": 'Chicxulub_crater',
-    #     "author": 'wikipedia',
-    #     "credsFileName": "api_keys.json",
-    #     "mode": "local",
-    #     "system": "dropbox",
-    #     "filePath": "/home/adimitrova/DEVELOPMENT/Github/PERSONAL_REPOS/"
-    # }
+    settings = {
+        "URL": "https://www.ranker.com/list/mummy-museum-guanajuato-mexico/genevieve-carlton",
+        "title": 'Guanajuato_mummies',
+        "author": 'article',
+        "credsFileName": "api_keys.json",
+        "mode": "local",
+        "system": "dropbox",
+        "filePath": "/home/adimitrova/DEVELOPMENT/Github/PERSONAL_REPOS/"
+    }
 
     epub = epubify.Epubify(**settings)
     text = epub.fetch_html_text()

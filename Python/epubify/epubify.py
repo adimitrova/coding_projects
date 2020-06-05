@@ -37,14 +37,19 @@ class Epubify(object):
     def fetch_html_text(self):
         response = requests.get(self.url, verify=False)
 
-        soup = BeautifulSoup(response.content, features="html.parser")
+        html = BeautifulSoup(response.content, features="html.parser")
 
         # kill all script and style elements
-        for element in soup(["script", "style", "meta", "footer", "img", "li", "ul"]):
-            element.extract()  # rip it out
+        for element in html(["script", "style", "meta", "footer", "img", "li", "ul"]):
+            print(element.get('name'))
+            if element == "meta":
+                # get content of meta tags
+                element.get('content')
+            else:
+                element.extract()  # rip it out
 
         print(">> Getting the text..")
-        text = soup.get_text().strip('\n')
+        text = html.get_text().strip('\n')
         return text
 
     def preprocess_text(self, text):
@@ -83,6 +88,8 @@ class Epubify(object):
         # reg_ex = re.compile(r'(\[[0-9]+\]|\[[a-z]+\]|\[редактиране \| редактиране на кода\])')
         final_content = new_chunks
         final_content = re.sub(reg_ex, '', final_content)
+        # print("========================== CONTENT =================\n\n%s\n\n ============================================" %final_content)
+
         return final_content
         # TODO: Add more cleansing logic
 
