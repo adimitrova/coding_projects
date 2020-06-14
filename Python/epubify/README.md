@@ -1,4 +1,4 @@
-<img src="img/epubify.png" alt="drawing" width="400"/>
+<img src="img/epubify.png" alt="drawing" width="300"/>
 
 # ePubify
 
