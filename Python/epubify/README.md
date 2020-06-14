@@ -1,5 +1,7 @@
 <img src="img/epubify.png" alt="drawing" width="400"/>
+
 # ePubify
+
 ==================
 
 Have you ever wanted to read that huge article, but in a more readable format AND on your EBOOK reader? Maybe you started reading it, but didn't have time to finish? Maybe you use the Pocket application to save your articles? BUT that's not the same like your favourite Kindle or Pocketbook device?! Your eyes hurt?
