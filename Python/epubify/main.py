@@ -4,7 +4,6 @@ from sys import modules
 from importlib import import_module
 
 epubify = import_module(name="epubify", package="epubify")
-ascii_art = import_module(name="ascii_art", package="epubify")
 
 
 def input_prompt():
@@ -55,7 +54,8 @@ def input_prompt():
 
 
 def main():
-    settings = input_prompt()
+    # settings = input_prompt()
+    # TODO: Implement subdictionaries or list of items in order to have multiple books processed at once
 
     # settings = {
     #     "URL": "https://en.wikipedia.org/wiki/Chicxulub_crater",
@@ -63,20 +63,29 @@ def main():
     #     "author": 'wikipedia',
     #     "credsFileName": "api_keys.json",
     #     "mode": "local",
-    #     "system": "dropbox",
-    #     "filePath": "/home/adimitrova/DEVELOPMENT/Github/PERSONAL_REPOS/"
+    #     "filePath": "/home/adimitrova/DEVELOPMENT/Github/PERSONAL_REPOS"              # local file path
     # }
 
-    epub = epubify.Epubify(**settings)
-    text = epub.fetch_html_text()
-    book_content = epub.preprocess_text(text)
-    ebook = epub.create_book(book_content)
-    epub.save_book(book=ebook, mode='remote', sys='dropbox')
+    settings = {
+        "URL": "https://en.wikipedia.org/wiki/Chicxulub_crater",
+        "title": 'Chicxulub_crater',
+        "author": 'wikipedia',
+        "credsFileName": "api_keys.json",
+        "mode": "remote",
+        "save_mode": "overwrite",      # not required, default - it won't override and will show a notification about it
+        "system": "dropbox",                # only if mode is remote
+        "filePath": "/home/adimitrova/DEVELOPMENT/Github/PERSONAL_REPOS"        # remote file path, if omitted - save to root
+    }
 
-    print(ascii_art.llama_small)
+    epub = epubify.Epubify(**settings)
+    # Note: Cascading/Chaining method calls - SO COOOOOL BRO!!!!!!!!!
+    ebook = epub.fetch_html_text().preprocess_text().create_book()
+    epub.save_book(book=ebook, mode='remote', sys='dropbox')
 
 
 if __name__ == '__main__':
+    # TODo: CREATE AN EXECUTABLE with pyinstaller
+    # https://realpython.com/pyinstaller-python/#preparing-your-project
     main()
 
     # https://stackoverflow.com/questions/1325581/how-do-i-check-if-im-running-on-windows-in-python

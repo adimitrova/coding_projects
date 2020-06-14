@@ -3,6 +3,10 @@ import mkepub, re, json, dropbox, requests, urllib
 from os import getcwd, path
 from bs4 import BeautifulSoup
 import urllib3
+from importlib import import_module
+
+ascii_art = import_module(name="ascii_art", package="epubify")
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -17,6 +21,7 @@ class Epubify(object):
         self.system = kwargs.get("system")
         self.mode = kwargs.get("mode", None)
         self.file_path = kwargs.get('filePath', None)
+        self.book_content = ""      # initial state of the text is empty, gets replaces in fetch_html_text()
 
         if not self.mode and not self.file_path:
             # set local filepath
@@ -26,8 +31,13 @@ class Epubify(object):
         elif self.mode == "remote" and self.file_path:
             assert not str(self.file_path).endswith('.epub')
             self.file_path = kwargs.get('filePath') + '%s.epub' % self.title
-        else:
-            self.file_path = '%s/books/%s.epub' % (getcwd(), self.title)
+        elif self.file_path is not None and self.mode == 'local':
+            from os import mkdir
+            try:
+                mkdir(self.file_path + '/books/')
+            except FileExistsError:
+                pass
+            self.file_path = self.file_path + '/books/%s.epub' % self.title
 
         # update filePath to the dict which will be passed onto the save_book method
         self.settings['filePath'] = self.file_path
@@ -40,16 +50,20 @@ class Epubify(object):
         soup = BeautifulSoup(response.content, features="html.parser")
 
         # kill all script and style elements
+        # TODO: Add a check for text in the "meta" element and fetch the text
         for element in soup(["script", "style", "meta", "footer", "img", "li", "ul"]):
             element.extract()  # rip it out
 
-        print(">> Getting the text..")
+        print(">> Getting the HTML content..")
         text = soup.get_text().strip('\n')
-        return text
+        print(">> HTML content fetched and stored safely.")
+        self.book_content = text
+        return self     # Note: Enables chaining of another method after this one. (called cascading)
 
-    def preprocess_text(self, text):
-        # break into lines and remove leading and trailing space on each
-        lines = (line.strip() for line in text.splitlines() if len(line) > 3)
+    def preprocess_text(self):
+        # TODO: Add more cleansing logic
+        # TODO: break into lines and remove leading and trailing space on each
+        lines = (line.strip() for line in self.book_content.splitlines() if len(line) > 3)
 
         reg_ex = re.compile('(\[[0-9]+\]|\[[a-z]+\]|\[редактиране \| редактиране на кода\])')
         print(">> Processing the text..")
@@ -83,8 +97,9 @@ class Epubify(object):
         # reg_ex = re.compile(r'(\[[0-9]+\]|\[[a-z]+\]|\[редактиране \| редактиране на кода\])')
         final_content = new_chunks
         final_content = re.sub(reg_ex, '', final_content)
-        return final_content
-        # TODO: Add more cleansing logic
+        print(">> HTML content processed and saved.")
+        self.book_content = final_content
+        return self
 
     @staticmethod
     def system_import(sys, **kwargs):
@@ -98,14 +113,9 @@ class Epubify(object):
 
         return system_instance
 
-    def create_book(self, book_text):
+    def create_book(self):
         book = mkepub.Book(title=self.title, author=self.author)
-
-        book.add_page(self.title, book_text)
-        # print(f"\n========== CONTENT =========== {final_content} \n============== END OF CONTENT =============\n")
-
-        local_path = "{}/books/{}.epub".format(getcwd(), self.title)
-
+        book.add_page(self.title, self.book_content)
         return book
 
     def save_book(self, book, mode='local', sys=None):
@@ -116,21 +126,20 @@ class Epubify(object):
                 print(">> Saved (locally) at: {}".format(self.file_path))
 
             except FileExistsError as err:
-                print(">> A file with this name already exists at {}".format(self.file_path))
+                print(">> A file with this name already exists at [{}]. \nOVERRIDE? (y/n)".format(self.file_path))
+                override = input()
+                if override == 'y':
+                    print(">> Overriding the book")
+                    from os import remove
+                    remove(self.file_path)
+                    book.save(self.file_path)
+                else:
+                    print(">> Skip saving the book..")
+                    pass
         elif self.mode == 'remote':
             # TODO: save to system (pocket, dropbox etc)
-            print("Saving to system %s" % sys)
+            print(">> Saving to system %s" % sys)
             target_system = self.system_import(sys, **self.settings)
             target_system.save_book(book)
-
-
-if __name__ == '__main__':
-    settings = {
-        "URL": 'someURL',
-        "title": 'harrypotter',
-        "author": 'j.k.rowling',
-        "credsFileName": "api_keys.json"
-    }
-
-    epubify = Epubify(**settings)
-    system = Epubify.system_import('dropbox', **settings)
+        print(">> Done!")
+        print(ascii_art.llama_small)

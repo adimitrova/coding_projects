@@ -8,17 +8,21 @@ class Dropbox(object):
         self.token = self._fetch_token_from_cred_file(self.cred_filename)
         self.dropbox_client = dropbox.Dropbox(oauth2_access_token=self.token)
         self.output_file_path = kwargs.get('filePath', '')      # if no filePath, save to root
+        self.save_mode = kwargs.get('save_mode')    # to overwrite the file if exists or not, default is NOT
 
     def _fetch_token_from_cred_file(self, cred_filename):
         with open(cred_filename, 'r') as file:
             creds = json.load(file).get('dropbox')
 
-        return creds['access_token']
+        return creds['token']
 
     def save_book(self, book):
         # ================================== Save to dropbox ===============================
 
         dbx = dropbox.Dropbox(self.token)
+        mode = (dropbox.files.WriteMode.overwrite
+                if self.save_mode == 'overwrite'
+                else dropbox.files.WriteMode.add)
 
         try:
             with open(self.output_file_path, "rb") as file:
