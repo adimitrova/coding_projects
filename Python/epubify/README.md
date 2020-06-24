@@ -1,5 +1,9 @@
 <img src="img/epubify.png" alt="drawing" width="300"/>
 
+![release](https://img.shields.io/badge/release-v0.1%20beta-blue)
+![status](https://img.shields.io/badge/status-active%20development-yellow)
+![Black Logo](https://img.shields.io/badge/code%20style-black-000000.svg)
+
 # ePubify
 
 Have you ever wanted to read that huge article, but in a more readable format AND on your EBOOK reader? Maybe you started reading it, but didn't have time to finish? Maybe you use the Pocket application to save your articles? BUT that's not the same like your favourite Kindle or Pocketbook device?! Your eyes hurt?
