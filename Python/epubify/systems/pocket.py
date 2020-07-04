@@ -1,4 +1,9 @@
-import json, requests
+import json, requests, webbrowser, logging, re
+from sys import exit
+from os import getcwd
+
+logger = logging.getLogger(__name__)
+
 
 class Pocket(object):
     """
@@ -6,6 +11,7 @@ class Pocket(object):
     retrieve their original URLs
     in order for Epubify to convert the original URLs into epub files
     """
+
     def __init__(self, **kwargs):
         """
         The constructor receives a keyword argument list, which
@@ -13,60 +19,112 @@ class Pocket(object):
         credential file path etc
         :param kwargs: keyword arguments
         """
-        self.cred_filename = 'systems/vault/' + kwargs.get('credsFileName', "api_keys.json")
-        self.authenticated = self._authenticate(self.cred_filename)
-        self.user_name = ''
+        # self.cred_filename = getcwd() + '/vault/' + kwargs.get('credsFileName', "api_keys.json")
+        # Define epubify CONSTANTS
+        self.config = kwargs
+        self.EPUBIFY_KEY = '92033-7e774220ee6e0a96bc04ed2d'
+        self.REDIRECT_URL = "http://worldofinspiration.net/epubify.html"
+        self.user_name = ""
+        self.access_code = None
+        self.authenticated = self.authenticate()
+        self.pocket_list = ""
 
     def get_article_list(self):
-        if self._authenticate():
-            pass
+        # http://getpocket.com/developer/docs/v3/retrieve
 
-    def _authenticate(self):
-        self.code = ''
-        headers = {'Content-Type': 'application/x-www-form-urlencoded', 'X-Accept': 'application/json'}
-
-        with open(self.cred_filename, 'r') as file:
-            creds = json.load(file)
-        # auth_url = "https://readitlaterlist.com/v2/get?{params}"
-        print(">> Executing Pocket [Authentication] step 1 .. ")
-        step_1_auth = "https://getpocket.com/v3/oauth/request?redirect_uri={redirect_uri}&consumer_key={consumer_key}"
+        url = 'https://getpocket.com/v3/get'
         params = {
-            "consumer_key": creds['pocket']['consumer_key'],
-            "redirect_uri": creds['pocket']['redirect_uri']
+            "consumer_key": self.EPUBIFY_KEY,
+            "access_token": self.access_code,
+            "sort": "newest",
+            "contentType": "article",
+            "detailType": "simple"
         }
-        auth_url = step_1_auth.format(consumer_key=params.get('consumer_key'), redirect_uri=params.get('redirect_uri'))
-        response = requests.post(auth_url, verify=True)
-        params['request_token'] = response.text.split('=')[1]
-        print(">> [Authentication] step 1 done. ")
+        response = self.__post_req(base_url=url, params=params)
+        self.pocket_list = response.json().get('list')
+        print(">> Article list retrieved from pocker successfully.")
+        return self
 
-        print(">> Executing Pocket [Authentication] step 2 .. ")
-        step_2_auth = "https://getpocket.com/auth/authorize?request_token={token}&redirect_uri={redirect_uri}".format(
-            redirect_uri=params.get('redirect_uri'),
-            token=params['request_token']
-        )
-        resp = requests.get(step_2_auth, verify=True)
-        self.code = params['request_token']
-        print(">> [Authentication] step 2 done. ")
+    def fetch_articles(self):
+        article_urls = [str(self.pocket_list.get(item).get('given_url')) for item in self.pocket_list]
+        article_titles = [str(self.pocket_list.get(item).get('resolved_title')) for item in self.pocket_list]
+        articles = dict(zip(article_titles, article_urls))
+        return articles
 
-        print(">> Executing Pocket [Authentication] step 3 .. ")
-        step_3_auth = "https://getpocket.com/v3/oauth/authorize".format(
-            redirect_uri=params.get('redirect_uri'),
-            token=params['request_token']
-        )
-        resp = requests.get(step_3_auth, verify=True)
-        response_code = resp.status_code
-
-        if response_code not in [200, 201, 202, 204]:
-            # print the actual error message
-            resp.raise_for_status()
-
-        print(">> [Authentication] step 3 done. ")
-        # print(creds)
-
-        # https://getpocket.com/developer/docs/authentications
-
+    def authenticate(self):
+        self._step_one_access_code()
+        self._step_two_user_authorization()
+        self._step_three_authorize()
         return True
 
-    def is_authenticated(self):
-        return self.authenticated
+    def __get_req(self, params, base_url):
+        response = requests.get(base_url, data=params)
+
+        # if response_code not in [200, 201, 202, 204]:
+        if not response.headers.get("X-Error"):
+            return response
+        else:
+            response.raise_for_status()
+
+    def __post_req(self, params, base_url, headers=None):
+        response = requests.post(base_url, data=params, headers=headers)
+        if not response.headers.get("X-Error"):
+            return response
+        else:
+            response.raise_for_status()
+
+    def _step_one_access_code(self):
+        print(">> Executing Pocket step 1 [Authentication].. ")
+        url = "https://getpocket.com/v3/oauth/request"
+        params = {
+            "consumer_key": self.EPUBIFY_KEY,
+            "redirect_uri": self.REDIRECT_URL
+        }
+
+        access_code = self.__post_req(
+            base_url=url,
+            params=params) \
+            .text.split('=')[1]
+
+        print(">> Step 1 [Authentication]: Access code received successfully. ")
+        self.access_code = access_code
+
+    def _step_two_user_authorization(self):
+        print(">> Executing Pocket step 2 [Authorization].. ")
+        url = "https://getpocket.com/auth/authorize?request_token={code}&redirect_uri={redirect_uri}".format(
+            redirect_uri=self.REDIRECT_URL,
+            code=self.access_code,
+        )
+        print("""
+            Your browser will now open the following URL automatically. Please authorize ePubify
+            If the browser doesn't load automatically, please click on the link.
+            If you have already authorized ePubify, you will see the \"THANK YOU\" page directly. 
+            Then, please come back here and <PUSH ANY KEY TO CONTINUE>...
+            URL: {url}
+            """.format(url=url))
+        webbrowser.open(url, new=2)
+        input()
+        print(">> Step 2 [Authorization] complete.")
+
+    def _step_three_authorize(self):
+        print(">> Executing Pocket step 3 [Authorization].. ")
+        params = {
+            "consumer_key": self.EPUBIFY_KEY,
+            "code": self.access_code,
+        }
+        url = "https://getpocket.com/v3/oauth/authorize"
+        response = self.__post_req(base_url=url, params=params)
+        self.access_code = re.findall("(?:access_token=)(.+)(?:&.+)", response.text)
+        # Next:
+        """
+        access token contains a Response object. Figure
+        out how to convert to json because response.json() fails
+        OR get the toekn from response.text with a regex. 
+        Then, using the token, store it and request the user's list
+        This is the converted user access code from step 1 + 
+        users authorization of the epubify app
+        """
+        # TODO: code here
+
+        print(">> Step 3 [Authorization] complete.")
 

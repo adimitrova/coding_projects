@@ -6,6 +6,7 @@ import urllib3
 from importlib import import_module
 
 ascii_art = import_module(name="ascii_art", package="epubify")
+utils = import_module(name="utils", package="epubify")
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -13,24 +14,30 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Epubify(object):
     # TODO: replace all prints with logger
-    def __init__(self, **kwargs):
-        self.settings = kwargs
-        self.url = kwargs.get('URL').strip("\"").strip("\'")
-        self.title = kwargs.get('title')
-        self.author = kwargs.get('author')
-        self.system = kwargs.get("system")
-        self.mode = kwargs.get("mode", None)
-        self.file_path = kwargs.get('filePath', None)
+    # TODO: Rework for cases of multiple articles at once OR keep this class as a single article at a time
+    # Maybe the latter is better
+
+    def __init__(self, **config):
+        self.settings = config
+
+        self.url = config['article']['url'].strip("\"").strip("\'")
+        self.title = config['article']['title']
+        self.author = config['article']['author']
+
+        self.system = config.get("system")
+        self.mode = config.get("mode", None)
+        self.file_path = config.get('filePath', None)
         self.book_content = ""      # initial state of the text is empty, gets replaces in fetch_html_text()
 
+        #TODO: Fix this mess
         if not self.mode and not self.file_path:
             # set local filepath
-            self.file_path = kwargs.get('filePath', '%s/books/%s.epub' % (getcwd(), self.title))
+            self.file_path = config.get('filePath', '%s/books/%s.epub' % (getcwd(), self.title))
         elif self.mode == "remote" and not self.file_path:
             self.file_path = None
         elif self.mode == "remote" and self.file_path:
             assert not str(self.file_path).endswith('.epub')
-            self.file_path = kwargs.get('filePath') + '%s.epub' % self.title
+            self.file_path = config.get('filePath') + '%s.epub' % self.title
         elif self.file_path is not None and self.mode == 'local':
             from os import mkdir
             try:
@@ -38,11 +45,15 @@ class Epubify(object):
             except FileExistsError:
                 pass
             self.file_path = self.file_path + '/books/%s.epub' % self.title
+        self.settings['filePath'] = self.file_path
+
+        if not self.file_path:
+            self.file_path = '~/Desktop/' + 'epubify_article.epub'
 
         # update filePath to the dict which will be passed onto the save_book method
         self.settings['filePath'] = self.file_path
 
-        print(">> The book will be saved at: \n[%s] " % self.file_path)
+        print(">> The book will be saved at: [%s] " % self.file_path)
 
     def fetch_html_text(self):
         response = requests.get(self.url, verify=False)
@@ -101,24 +112,25 @@ class Epubify(object):
         self.book_content = final_content
         return self
 
-    @staticmethod
-    def system_import(sys, **kwargs):
-        module_name = 'drop_box' if sys == 'dropbox' else sys.lower()
-        try:
-            from importlib import import_module
-            class_ = getattr(import_module("systems.%s" % module_name), sys.capitalize())
-            system_instance = class_(**kwargs)
-        except ImportError as e:
-            print(e)
-
-        return system_instance
+    # @staticmethod
+    # def system_import(sys, **config):
+    #     module_name = 'drop_box' if sys == 'dropbox' else sys.lower()
+    #     try:
+    #         from importlib import import_module
+    #         class_ = getattr(import_module("systems.%s" % module_name), sys.capitalize())
+    #         system_instance = class_(**config)
+    #     except ImportError as e:
+    #         print(e)
+    #
+    #     return system_instance
+    # Note; Moved to utils
 
     def create_book(self):
         book = mkepub.Book(title=self.title, author=self.author)
         book.add_page(self.title, self.book_content)
         return book
 
-    def save_book(self, book, mode='local', sys=None):
+    def save_book(self, book, sys=None):
         if self.mode == 'local':
             # save on local machine
             try:
@@ -138,8 +150,13 @@ class Epubify(object):
                     pass
         elif self.mode == 'remote':
             # TODO: save to system (pocket, dropbox etc)
-            print(">> Saving to system %s" % sys)
-            target_system = self.system_import(sys, **self.settings)
-            target_system.save_book(book)
+            print(">> Import system [%s]" % sys)
+            target_system = utils.system_import(sys, **self.settings)
+            import inspect
+            if sys == 'dropbox':
+                print("\t>> For dropbox, bytes data is required. Converting book content to bytes.. ")
+                self.book = str.encode(book)
+                print(type(book))
+                target_system.save_book(book=self.book_content)
         print(">> Done!")
         print(ascii_art.llama_small)

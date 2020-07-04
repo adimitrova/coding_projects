@@ -12,41 +12,42 @@ ePubify is the answer to all that - it's a small application that will fetch the
 
 Enjoy!
 
+### Architecture
+------------
+
+<img src="img/epubify_diagram.jpg" alt="drawing" width="1000"/>
+
 ### Installation
 ------------
 
 ```shell
 git clone git://github.com/adimitrova/coding_projects.git
 cd Python/epubify
-pip install -e requirements.txt
+pip install -r requirements.txt
 ```
 
+--------
 
-#### Saving on different systems: 
-1. To Use Dropbox to save the files, you need to authorize the Dropbox application,
-see setup instructions below:
+## Reading articles
 
-Go to https://www.dropbox.com/developers/apps
+#### Pocket app
+Once you run ePubify, it will use epubify's code to request user access code, it will then request the user to authorize the application by automatically opening the browser. Please accept, if you agree to the term. ePubify will request __full access__. But the only thing it actually does, is read your article list, fetch their original URLs and process them. 
 
-Create an application with the following settings:
+To start the application, create your json config file, copy the path to it and run as follows:
 
 ```shell
-
-Name: epubify
-Permission type: Full Dropbox
-
+python3 main.py --cf '/path/to/config.json'
 ```
 
-Next, on your machine go to the epubify directory and inside the `epubidy/systems/vault` folder, create a file called `api_keys.json` and replace the `xxxxxx` with your token and keys as follows:
+__NB!__ Sample config available: `sample_configs/pocket_articles_to_dropbox.json`
 
-(You could use a different filename as well, but have to specify its name in the epubify config file later.)
+--------
 
-```json
-{
-    "dropbox": {
-        "token": "xxxxxx",
-        "app_key": "xxxxxx",
-        "app_secret": "xxxxxx"
-    }
-}
-```
+## Saving ebooks
+
+#### Local machine
+You can save to local machine by providing the path to a directory where you want to get your books in the end of the processing. You can pass this in the json config, or via CLI with the `-fp` argument. If this argument is skipped, files will be saved to your Desktop.
+
+
+#### Dropbox
+(coming soon)
