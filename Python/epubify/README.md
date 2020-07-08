@@ -1,7 +1,7 @@
 <img src="https://i.pinimg.com/originals/b7/bd/c8/b7bdc816ae2b2f04f9e9b30875884e55.jpg" alt="drawing" width="100"/> 
 
 ### Development is moved to it's own repo. Click [HERE to check ePubify](https://github.com/adimitrova/Epubify/tree/master)
-### In Development branch is all development for the moment. 
+#### Currently, there is no official version published to PROD (master branch), so all the code is in the `development` branch
 
 ------------
 
