@@ -1,3 +1,7 @@
+img src="https://i.pinimg.com/originals/b7/bd/c8/b7bdc816ae2b2f04f9e9b30875884e55.jpg" alt="drawing" width="100"/>
+### Development is moved to it's own repo. Click [HERE to check ePubify](https://github.com/adimitrova/Epubify/tree/master)
+In Development branch is all development for the moment. 
+
 <img src="img/epubify.png" alt="drawing" width="300"/>
 
 ![status](https://img.shields.io/badge/status-active%20development-yellow)
