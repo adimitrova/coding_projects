@@ -1,14 +1,18 @@
-## Unstage an added file in Git
+#### Unstage an added file in Git
 If you added a file by mistake, you can unstage it (but keep local changes) by saying
 
 > git reset HEAD path/to/file
 
+or
+
+> git reset --soft HEAD^
+
 ## Adding an SSH key with:
 
-// list the existing ssh-keys
+* list the existing ssh-keys
 > ssh-add -l 
 
-// add the key
+* add the key
 > ssh-add ~/Development/Github/newSSHMac
 
 -------------------
@@ -155,7 +159,7 @@ Use with `git tree`
 
 ------------------------
 
-## Custom git commands
+## __Custom__ git commands
 #### Enable `git browse origin` command
 This command opens the current repo in the browser with a custom script - SUPER COOL!
 
@@ -202,23 +206,8 @@ CD to a git repo and run the command:
 ## Copy a file from one branch to another
 
 Switch to the destination branch
-
-```
-git checkout destinationBranch
-git checkout sourceBranchName myFile.txt
-```
-
-Or if the files are multiple with almost the same names and, say, different dates, do:
-
-```
-git checkout sourceBranchName data_dump_2020-05-*.csv
-```
-
-This will copy all files with dates in May in that branch and location
-
-- data_dump_2020-05-20.csv
-- data_dump_2020-05-21.csv
-- data_dump_2020-05.22.csv
+> git checkout destinationBranch
+> git checkout sourceBranchName myFile.txt
 
 -----------------------
 
@@ -268,7 +257,7 @@ git branch branch_name -u your_new_remote/branch_name
 
 ## Undo LOCAL changes made to a file
 
-```
+```sh
 git checkout -- filename.txt
 ```
 
@@ -294,20 +283,23 @@ But first, add this line to the `~/.zshrc` file and then source it
 ```sh
 alias multipull="find . -mindepth 1 -maxdepth 1 -type d -print -exec git -C {} pull \;"
 ```
-```
-git branch branch_name --set-upstream-to your_new_remote/branch_name
+
+----------------
+
+## Revert back to a given commit 
+
+```sh
+git revert --no-commit 94c68ba2..HEAD 
+git commit -m "revert back to old commit"
 ```
 
-Or you can use the -u switch:
 
-```
-git branch branch_name -u your_new_remote/branch_name
-```
+------------------
 
----------------------------
+## Revert ONE FILE from a LOCAL commit
 
-## Track who changed what in a given file:
-
-```
-git blame <filename>
+```sh
+git log
+# (copy the latest commit hash)
+git reset <commit_id> <myfile.py>
 ```
