@@ -303,3 +303,11 @@ git log
 # (copy the latest commit hash)
 git reset <commit_id> <myfile.py>
 ```
+
+----------------
+
+## `.gitignore` not working
+
+```
+git rm -r --cached . && git add . && git commit -m "fixing .gitignore"
+```
